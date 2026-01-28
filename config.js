@@ -1,8 +1,8 @@
 module.exports = {
     // Upstream Provider Credentials
-    XTREAM_BASE_URL: 'http://live.fuxxion.club:8080',
-    USERNAME: 'mottamartin1',
-    PASSWORD: 'iiQ7uuhbWA',
+    XTREAM_BASE_URL: 'http://starshare.st:80',
+    USERNAME: '758811',
+    PASSWORD: '854100',
 
     // Spoofed Device Headers (TiviMate Latest)
     SPOOF_HEADERS: {
