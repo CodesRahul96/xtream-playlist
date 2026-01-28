@@ -49,12 +49,8 @@ module.exports = async (req, res) => {
     }
 
     try {
-        // Stream validation headers
-        const headers = {
-            ...SPOOF_HEADERS,
-            // Only set specific headers to avoid conflicts
-            'User-Agent': SPOOF_HEADERS['User-Agent']
-        };
+        // Stream validation headers (Use Random Profile)
+        const headers = config.getRandomHeaders();
 
         const response = await axios({
             method: 'get',

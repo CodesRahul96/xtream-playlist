@@ -25,7 +25,7 @@ module.exports = async (req, res) => {
                 type: 'm3u_plus',
                 output: 'ts'
             },
-            headers: SPOOF_HEADERS,
+            headers: config.getRandomHeaders(),
             responseType: 'stream',
             timeout: 60000 // 60s timeout
         });
