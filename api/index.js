@@ -432,8 +432,8 @@ module.exports = async (req, res) => {
                                             </div>
                                         </div>
                                         <div class="stat-row">
-                                            <span class="stat-label">Upstream Server</span>
-                                            <span class="stat-value">vipkendrake.top:8080</span>
+                                            <span class="stat-label">Proxy Status</span>
+                                            <span class="stat-value" style="color: #28a745">Active & Protected</span>
                                         </div>
                                         <div class="stat-row">
                                             <span class="stat-label">Platform</span>
@@ -444,8 +444,8 @@ module.exports = async (req, res) => {
                                             <span class="stat-value">Global Edge Network</span>
                                         </div>
                                         <div class="stat-row">
-                                            <span class="stat-label">Device Profiles</span>
-                                            <span class="stat-value">8 Rotating</span>
+                                            <span class="stat-label">Protection</span>
+                                            <span class="stat-value">Device Masking Enabled</span>
                                         </div>
                                     </div>
                                 </div>
