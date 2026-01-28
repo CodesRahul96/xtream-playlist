@@ -52,81 +52,80 @@ module.exports = async (req, res) => {
         // Stream validation headers (Use Random Profile)
         const headers = config.getRandomHeaders();
 
-        const response = await axios({
-            method: 'get',
-            url: upstreamUrl,
-            responseType: 'stream', // Important for memory efficiency
-            headers: headers,
-            httpAgent,
-            httpsAgent,
-            timeout: isHlsPlaylist ? 15000 : STREAM_TIMEOUT,
-            maxRedirects: 5,
-            decompress: false // Let Vercel/Client handle (or pass through) compression
-        });
-
-        // Set appropriate content type
+        // 1. Handle HLS Playlist (M3U8) - Fetch as TEXT
         if (isHlsPlaylist) {
-            res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
-        } else {
-            res.setHeader('Content-Type', response.headers['content-type'] || 'video/mp2t');
-        }
+            const response = await axios({
+                method: 'get',
+                url: upstreamUrl,
+                responseType: 'text', // Safer for text manipulation
+                headers: headers,
+                httpAgent,
+                httpsAgent,
+                timeout: 10000,
+                maxRedirects: 5
+            });
 
-        // Handle HLS Playlist (M3U8) rewriting or Pass-through Stream
-        if (isHlsPlaylist) {
-            // For playlists, we need to read the content to rewrite it
-            // But since we are using 'stream', we collect it first
-            // (M3U8 files are small so this is safe)
-            const chunks = [];
-            response.data.on('data', chunk => chunks.push(chunk));
-            response.data.on('end', () => {
-                const m3u8Content = Buffer.concat(chunks).toString();
-                const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
-                const host = req.headers['x-forwarded-host'] || req.headers.host;
-                const proxyBaseUrl = `${protocol}://${host}/api/stream/${streamId}`;
+            const m3u8Content = response.data;
+            const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+            const host = req.headers['x-forwarded-host'] || req.headers.host;
+            const proxyBaseUrl = `${protocol}://${host}/api/stream/${streamId}`;
 
-                // Rewrite logic...
-                const lines = m3u8Content.split('\n');
-                const rewrittenLines = lines.map(line => {
-                    const trimmed = line.trim();
-                    if (!trimmed || trimmed.startsWith('#')) return line;
-                    if (trimmed.startsWith('http')) return trimmed; // Absolute URLs
+            // Rewrite logic...
+            const lines = m3u8Content.split('\n');
+            const rewrittenLines = lines.map(line => {
+                const trimmed = line.trim();
+                if (!trimmed || trimmed.startsWith('#')) return line;
+                if (trimmed.startsWith('http')) return trimmed; // Absolute URLs
 
-                    // Resolve relative URLs
-                    // Capture effective URL logic would be needed here, 
-                    // but for now we assume relative to upstream base
-                    // Note: axios 'responseUrl' might be needed if redirects happened
-                    const effectiveUrl = response.request.res.responseUrl || upstreamUrl;
+                // Resolve relative URLs using axios responseURL if available
+                const effectiveUrl = response.request?.res?.responseUrl || upstreamUrl;
+                try {
                     const resolvedPath = new URL(trimmed, effectiveUrl).href;
                     const encodedPath = Buffer.from(resolvedPath).toString('base64url');
                     return `${proxyBaseUrl}/${encodedPath}`;
-                });
-
-                res.send(rewrittenLines.join('\n'));
+                } catch (e) {
+                    return line; // Fallback
+                }
             });
 
-            response.data.on('error', err => {
-                console.error('[Stream] HLS processing error:', err.message);
-                if (!res.headersSent) res.status(502).send('Upstream Error');
-            });
-
-        } else {
-            // Binary Stream (TS/MP4) - PIPE DIRECTLY!
-            // This is crucial for avoiding 502s on large video files
-            res.setHeader('Cache-Control', 'no-cache');
-            response.data.pipe(res);
-
-            response.data.on('error', (err) => {
-                console.error('[Stream] Stream pipe error:', err.message);
-                if (!res.headersSent) res.end();
-            });
+            res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
+            res.setHeader('Access-Control-Allow-Origin', '*');
+            res.send(rewrittenLines.join('\n'));
+            return;
         }
 
+        // 2. Binary Stream (TS/MP4) - Fetch as STREAM and PIPE
+        const response = await axios({
+            method: 'get',
+            url: upstreamUrl,
+            responseType: 'stream', // Crucial for memory efficiency
+            headers: headers,
+            httpAgent,
+            httpsAgent,
+            timeout: STREAM_TIMEOUT,
+            maxRedirects: 5,
+            decompress: false
+        });
+
+        res.setHeader('Content-Type', response.headers['content-type'] || 'video/mp2t');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+
+        // Pipe directly to client response
+        response.data.pipe(res);
+
+        response.data.on('error', (err) => {
+            console.error('[Stream] Pipe Error:', err.message);
+            if (!res.headersSent) res.end();
+        });
 
     } catch (error) {
-        console.error('[Stream] Fetch error:', error.message);
+        // Detailed Error Logging
+        const status = error.response ? error.response.status : 502;
+        console.error(`[Stream] Error fetching ${filename}:`, error.message);
+
         if (!res.headersSent) {
-            // Only send error if we haven't started streaming
-            res.status(502).send(`Stream fetch error: ${error.message}`);
+            res.status(status).send(`Stream fetch error: ${error.message} (${upstreamUrl})`);
         } else {
             res.end();
         }
