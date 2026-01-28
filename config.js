@@ -1,6 +1,6 @@
 // Upstream Provider Credentials
 // STRICTLY from Environment Variables (Supports both formats)
-XTREAM_BASE_URL: process.env.XTREAM_BASE_URL,
+XTREAM_BASE_URL: process.env.XTREAM_BASE_URL || process.env.XTREAM_BASE_URL,
     USERNAME: process.env.XTREAM_USERNAME || process.env.USERNAME,
         PASSWORD: process.env.XTREAM_PASSWORD || process.env.PASSWORD,
 
