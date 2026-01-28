@@ -40,26 +40,18 @@ module.exports = {
         }
     ],
 
-    // Helper to get random headers
+    // Helper to get random headers (Fixed to Safe Profile for Troubleshooting)
     getRandomHeaders: function () {
-        // Default fallbacks
-        const baseHeaders = {
+        return {
+            'User-Agent': 'TiviMate/4.7.0 (Linux; Android 11; TV)',
             'Accept': '*/*',
-            'Connection': 'keep-alive',
-            'Accept-Encoding': 'gzip, deflate',
-            'Accept-Language': 'en-US,en;q=0.9'
+            'Connection': 'keep-alive'
         };
-
-        const profiles = this.DEVICE_PROFILES || [];
-        const profile = profiles[Math.floor(Math.random() * profiles.length)];
-
-        return { ...baseHeaders, ...profile };
     },
 
     // Legacy Header (Fallback)
     SPOOF_HEADERS: {
-        'User-Agent': 'TiviMate/5.1.0 (Linux; Android 11; TV)',
-        'X-Requested-With': 'ar.tvplayer.tv',
+        'User-Agent': 'TiviMate/4.7.0 (Linux; Android 11; TV)',
         'Accept': '*/*',
         'Connection': 'keep-alive'
     },
