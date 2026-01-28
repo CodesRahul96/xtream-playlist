@@ -1,8 +1,9 @@
 module.exports = {
     // Upstream Provider Credentials
-    XTREAM_BASE_URL: 'http://vipkendrake.top:8080',
-    USERNAME: 'VIP014471744365754384',
-    PASSWORD: 'afd9826fe4e2',
+    // Defaults are for local dev fallback only. Set these in Vercel Env Vars for security.
+    XTREAM_BASE_URL: process.env.XTREAM_BASE_URL || 'http://vipkendrake.top:8080',
+    USERNAME: process.env.XTREAM_USERNAME || 'VIP014471744365754384',
+    PASSWORD: process.env.XTREAM_PASSWORD || 'afd9826fe4e2',
 
     // Spoofed Device Headers (Multiple Profiles for Rotation)
     DEVICE_PROFILES: [
