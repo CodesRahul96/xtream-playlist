@@ -49,79 +49,90 @@ module.exports = async (req, res) => {
     }
 
     try {
+        // Stream validation headers
+        const headers = {
+            ...SPOOF_HEADERS,
+            // Only set specific headers to avoid conflicts
+            'User-Agent': SPOOF_HEADERS['User-Agent']
+        };
+
         const response = await axios({
             method: 'get',
             url: upstreamUrl,
-            responseType: isHlsPlaylist ? 'text' : 'stream',
-            headers: { ...SPOOF_HEADERS },
+            responseType: 'stream', // Important for memory efficiency
+            headers: headers,
             httpAgent,
             httpsAgent,
-            timeout: isHlsPlaylist ? 10000 : STREAM_TIMEOUT,
-            maxRedirects: 5
+            timeout: isHlsPlaylist ? 15000 : STREAM_TIMEOUT,
+            maxRedirects: 5,
+            decompress: false // Let Vercel/Client handle (or pass through) compression
         });
 
-        // Capture the effective URL (after redirects)
-        const effectiveUrl = response.request.res.responseUrl || upstreamUrl;
-
-        // 1. Handle HLS Playlist (M3U8)
+        // Set appropriate content type
         if (isHlsPlaylist) {
-            let m3u8Content = response.data;
-            const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
-            const host = req.headers['x-forwarded-host'] || req.headers.host;
-            const proxyBaseUrl = `${protocol}://${host}/api/stream/${streamId}`;
+            res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
+        } else {
+            res.setHeader('Content-Type', response.headers['content-type'] || 'video/mp2t');
+        }
 
-            // Robust M3U8 Rewrite Logic
-            const lines = m3u8Content.split('\n');
-            const rewrittenLines = lines.map(line => {
-                const trimmed = line.trim();
-                if (!trimmed || trimmed.startsWith('#')) return line;
+        // Handle HLS Playlist (M3U8) rewriting or Pass-through Stream
+        if (isHlsPlaylist) {
+            // For playlists, we need to read the content to rewrite it
+            // But since we are using 'stream', we collect it first
+            // (M3U8 files are small so this is safe)
+            const chunks = [];
+            response.data.on('data', chunk => chunks.push(chunk));
+            response.data.on('end', () => {
+                const m3u8Content = Buffer.concat(chunks).toString();
+                const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+                const host = req.headers['x-forwarded-host'] || req.headers.host;
+                const proxyBaseUrl = `${protocol}://${host}/api/stream/${streamId}`;
 
-                // Absolute URL
-                if (trimmed.startsWith('http')) return trimmed;
+                // Rewrite logic...
+                const lines = m3u8Content.split('\n');
+                const rewrittenLines = lines.map(line => {
+                    const trimmed = line.trim();
+                    if (!trimmed || trimmed.startsWith('#')) return line;
+                    if (trimmed.startsWith('http')) return trimmed; // Absolute URLs
 
-                // Resolve against effective URL and encode for proxy
-                const resolvedPath = new URL(trimmed, effectiveUrl).href;
-                const encodedPath = Buffer.from(resolvedPath).toString('base64url');
-                return `${proxyBaseUrl}/${encodedPath}`;
+                    // Resolve relative URLs
+                    // Capture effective URL logic would be needed here, 
+                    // but for now we assume relative to upstream base
+                    // Note: axios 'responseUrl' might be needed if redirects happened
+                    const effectiveUrl = response.request.res.responseUrl || upstreamUrl;
+                    const resolvedPath = new URL(trimmed, effectiveUrl).href;
+                    const encodedPath = Buffer.from(resolvedPath).toString('base64url');
+                    return `${proxyBaseUrl}/${encodedPath}`;
+                });
+
+                res.send(rewrittenLines.join('\n'));
             });
 
-            res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
-            res.setHeader('Access-Control-Allow-Origin', '*');
-            res.send(rewrittenLines.join('\n'));
-            return;
+            response.data.on('error', err => {
+                console.error('[Stream] HLS processing error:', err.message);
+                if (!res.headersSent) res.status(502).send('Upstream Error');
+            });
+
+        } else {
+            // Binary Stream (TS/MP4) - PIPE DIRECTLY!
+            // This is crucial for avoiding 502s on large video files
+            res.setHeader('Cache-Control', 'no-cache');
+            response.data.pipe(res);
+
+            response.data.on('error', (err) => {
+                console.error('[Stream] Stream pipe error:', err.message);
+                if (!res.headersSent) res.end();
+            });
         }
 
-        // 2. Handle Binary Stream or Segments
-        // Check if filename is actually an encoded URL from our HLS rewrite
-        if (filename.length > 30 && !filename.includes('.')) {
-            try {
-                const decodedUrl = Buffer.from(filename, 'base64url').toString('utf8');
-                if (decodedUrl.startsWith('http')) {
-                    const segmentResponse = await axios({
-                        method: 'get',
-                        url: decodedUrl,
-                        responseType: 'stream',
-                        headers: { ...SPOOF_HEADERS },
-                        httpAgent,
-                        httpsAgent,
-                        timeout: STREAM_TIMEOUT
-                    });
-
-                    res.setHeader('Content-Type', segmentResponse.headers['content-type'] || 'video/mp2t');
-                    res.setHeader('Access-Control-Allow-Origin', '*');
-                    segmentResponse.data.pipe(res);
-                    return;
-                }
-            } catch (e) { /* ignore and proceed */ }
-        }
-
-        // Default direct stream pipe
-        if (response.headers['content-type']) res.setHeader('Content-Type', response.headers['content-type']);
-        res.setHeader('Access-Control-Allow-Origin', '*');
-        response.data.pipe(res);
 
     } catch (error) {
-        console.error(`[Stream] Error proxying ${filename}:`, error.message);
-        if (!res.headersSent) res.status(502).send('Upstream Error');
+        console.error('[Stream] Fetch error:', error.message);
+        if (!res.headersSent) {
+            // Only send error if we haven't started streaming
+            res.status(502).send(`Stream fetch error: ${error.message}`);
+        } else {
+            res.end();
+        }
     }
 };
