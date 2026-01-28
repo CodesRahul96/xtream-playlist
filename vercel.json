@@ -6,10 +6,16 @@
             "use": "@vercel/node"
         }
     ],
+    "functions": {
+        "api/**/*.js": {
+            "memory": 1024,
+            "maxDuration": 60
+        }
+    },
     "routes": [
         {
             "src": "/api/playlist",
-            "dest": "/index.js"
+            "dest": "/api/index.js"
         },
         {
             "src": "/api/stream/(.*)",
