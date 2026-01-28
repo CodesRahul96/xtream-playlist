@@ -1,8 +1,8 @@
 module.exports = {
     // Upstream Provider Credentials
-    XTREAM_BASE_URL: 'http://webo.asia:80',
-    USERNAME: '12341234',
-    PASSWORD: '43214321',
+    XTREAM_BASE_URL: 'http://vipkendrake.top:8080',
+    USERNAME: 'VIP014471744365754384',
+    PASSWORD: 'afd9826fe4e2',
 
     // Spoofed Device Headers (TiviMate Latest)
     SPOOF_HEADERS: {
