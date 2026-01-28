@@ -14,11 +14,11 @@
         },
         {
             "src": "/api/stream/(.*)",
-            "dest": "/index.js"
+            "dest": "/api/index.js"
         },
         {
             "src": "/",
-            "dest": "/index.js"
+            "dest": "/api/index.js"
         }
     ]
 }
