@@ -1,6 +1,54 @@
 // Cloudflare Workers Entry Point
 // This file adapts the Express-style handlers for Cloudflare Workers runtime
 
+// Device Profiles for Random User-Agent Rotation (Enhanced Device Bypass)
+const DEVICE_PROFILES = [
+    {
+        'User-Agent': 'TiviMate/5.1.0 (Linux; Android 11; TV)',
+        'X-Requested-With': 'ar.tvplayer.tv'
+    },
+    {
+        'User-Agent': 'IPTV Smarters/1.0 (Linux; Android 9; SM-G960F)',
+        'X-Requested-With': 'com.nst.iptvsmarterstvbox'
+    },
+    {
+        'User-Agent': 'Mozilla/5.0 (QtEmbedded; U; Linux; C) AppleWebKit/533.3 (KHTML, like Gecko) MAG200 stbapp ver: 2 rev: 250 Safari/533.3',
+        'X-User-Agent': 'Model: MAG250; Link: WiFi'
+    },
+    {
+        'User-Agent': 'VLC/3.0.16 LibVLC/3.0.16',
+        'X-Requested-With': 'org.videolan.vlc'
+    },
+    {
+        'User-Agent': 'Kodi/19.4 (Linux; Android 10; Mi Box)',
+        'X-Requested-With': 'org.xbmc.kodi'
+    },
+    {
+        'User-Agent': 'Perfect Player/1.5.8 (Linux; Android 11; SHIELD Android TV)',
+        'X-Requested-With': 'com.niklabs.pp'
+    },
+    {
+        'User-Agent': 'GSE SMART IPTV/7.5 (iOS; iPhone13,2; Scale/3.00)',
+        'X-Requested-With': 'com.gsetech.smartiptv'
+    },
+    {
+        'User-Agent': 'OTT Navigator/1.6.8.1 (Linux; Android 9; SM-G973F)',
+        'X-Requested-With': 'studio.scillarium.ottnavigator'
+    }
+];
+
+// Function to get random device headers
+function getRandomDeviceHeaders() {
+    const profile = DEVICE_PROFILES[Math.floor(Math.random() * DEVICE_PROFILES.length)];
+    return {
+        ...profile,
+        'Accept': '*/*',
+        'Connection': 'keep-alive',
+        'Accept-Encoding': 'gzip, deflate',
+        'Accept-Language': 'en-US,en;q=0.9'
+    };
+}
+
 const config = {
     XTREAM_BASE_URL: 'http://webo.asia:80',
     USERNAME: '12341234',
@@ -65,9 +113,12 @@ async function handlePlaylist(request, corsHeaders) {
     const baseUrl = `${url.protocol}//${url.host}`;
 
     try {
+        // Use random device headers for enhanced bypass
+        const deviceHeaders = getRandomDeviceHeaders();
+
         // Try get.php first with streaming to avoid memory limits
         const m3uResponse = await fetch(`${config.XTREAM_BASE_URL}/get.php?username=${config.USERNAME}&password=${config.PASSWORD}&type=m3u_plus&output=ts`, {
-            headers: config.SPOOF_HEADERS,
+            headers: deviceHeaders,
             signal: AbortSignal.timeout(30000) // Increased timeout
         });
 
@@ -160,8 +211,11 @@ async function handleStream(request, streamId, type, corsHeaders) {
     let lastError;
     for (let attempt = 0; attempt < 3; attempt++) {
         try {
+            // Use random device headers for each attempt
+            const deviceHeaders = getRandomDeviceHeaders();
+
             const response = await fetch(upstreamUrl, {
-                headers: config.SPOOF_HEADERS,
+                headers: deviceHeaders,
                 signal: AbortSignal.timeout(60000) // 60 second timeout for streams
             });
 
