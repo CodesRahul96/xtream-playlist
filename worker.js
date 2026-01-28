@@ -2,9 +2,9 @@
 // This file adapts the Express-style handlers for Cloudflare Workers runtime
 
 const config = {
-    XTREAM_BASE_URL: 'http://live.fuxxion.club:8080',
-    USERNAME: 'mottamartin1',
-    PASSWORD: 'iiQ7uuhbWA',
+    XTREAM_BASE_URL: 'http://starshare.st:80',
+    USERNAME: '758811',
+    PASSWORD: '854100',
     SPOOF_HEADERS: {
         'User-Agent': 'TiviMate/5.1.0 (Linux; Android 11; TV)',
         'X-Requested-With': 'ar.tvplayer.tv',
