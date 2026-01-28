@@ -1,5 +1,5 @@
-# Vercel Serverless Function Adapter
-# This file adapts the Express app for Vercel's serverless environment
+// Vercel Serverless Function Adapter
+// This file adapts the Express app for Vercel's serverless environment
 
 const playlistHandler = require('./api/playlist');
 const streamHandler = require('./api/stream');
