@@ -5,6 +5,7 @@ package-lock.json
 # Environment
 .env
 .env.local
+.env.example
 
 # Cloudflare
 .wrangler/
