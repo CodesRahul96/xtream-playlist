@@ -77,12 +77,6 @@ module.exports = async (req, res) => {
 
                         // Construct local proxy URL
                         let streamUrl = `${baseUrl}/api/stream/${id}/${type}.m3u8`;
-
-                        // Append redirect mode if enabled in config
-                        if (config.STREAM_MODE === 'redirect') {
-                            streamUrl += '?mode=redirect';
-                        }
-
                         outputChunk += `${streamUrl}\n`;
                     } catch (e) {
                         // Fallback: keep original if parsing fails

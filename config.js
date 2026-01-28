@@ -57,7 +57,7 @@ module.exports = {
     },
 
     // Performance Settings
-    STREAM_MODE: 'redirect', // 'proxy' or 'redirect' (Redirect is faster)
+    STREAM_MODE: 'proxy', // 'proxy' or 'redirect' (Redirect is faster)
     STREAM_TIMEOUT: 30000,
     PLAYLIST_TIMEOUT: 15000
 };
