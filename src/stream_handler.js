@@ -11,17 +11,20 @@ class StreamManager {
         // Normalize ID: remove .ts extension
         const streamId = rawStreamId.replace(/\.ts$/, '');
 
+        // Extract Client IP (support proxies like Cloudflare/Nginx)
+        const clientIP = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+
         // 1. Check if stream is already active
         if (this.activeStreams.has(streamId)) {
-            console.log(`[EXISTING] Client joined stream ${streamId}`);
+            console.log(`[EXISTING] Client (${clientIP}) joined stream ${streamId}`);
             this.subscribeToStream(streamId, res);
             return;
         }
 
         // 2. If not, start new stream
-        console.log(`[NEW] Starting upstream connection for ${streamId}`);
+        console.log(`[NEW] Starting upstream connection for ${streamId} (Msg IP: ${clientIP})`);
         try {
-            await this.startUpstreamConnection(streamId);
+            await this.startUpstreamConnection(streamId, clientIP);
             this.subscribeToStream(streamId, res);
         } catch (error) {
             console.error(`[ERROR] Failed to start stream ${streamId}:`, error.message);
@@ -29,16 +32,23 @@ class StreamManager {
         }
     }
 
-    async startUpstreamConnection(streamId) {
+    async startUpstreamConnection(streamId, clientIP) {
         const { url, username, password } = config.upstream;
         // streamId is already normalized
         const streamUrl = `${url}/${username}/${password}/${streamId}`;
 
         try {
+            const headers = {
+                'User-Agent': 'VLC/3.0.18 LibVLC/3.0.18', // Spoof User-Agent as well for better compatibility
+                'X-Forwarded-For': clientIP,
+                'X-Real-IP': clientIP
+            };
+
             const response = await axios({
                 method: 'get',
                 url: streamUrl,
-                responseType: 'stream'
+                responseType: 'stream',
+                headers: headers
             });
 
             // Create a broadcast stream (PassThrough)
