@@ -1,0 +1,20 @@
+#EXTM3U
+#EXTINF:-1 tvg-id="" tvg-name="PB: PTC PUNJABI" tvg-logo="https://upload.wikimedia.org/wikipedia/en/8/88/PTC_Punjabi.png" group-title="PUNJABI",PB: PTC PUNJABI
+http://localhost:3000/stream/171.ts
+#EXTINF:-1 tvg-id="ptcpunjabi.in" tvg-name="PB | PTC PUNJABI" tvg-logo="https://upload.wikimedia.org/wikipedia/en/8/88/PTC_Punjabi.png" group-title="PUNJABI",PB | PTC PUNJABI
+http://localhost:3000/stream/606227.ts
+#EXTINF:-1 tvg-id="ptcpunjabi.in" tvg-name="PB | PTC PUNJABI." tvg-logo="https://upload.wikimedia.org/wikipedia/en/8/88/PTC_Punjabi.png" group-title="PUNJABI",PB | PTC PUNJABI.
+http://localhost:3000/stream/606229.ts
+#EXTINF:-1 tvg-id="ptcpunjabi.in" tvg-name="PB | PTC PUNJABI | AIRTEL" tvg-logo="https://upload.wikimedia.org/wikipedia/en/8/88/PTC_Punjabi.png" group-title="PUNJABI",PB | PTC PUNJABI | AIRTEL
+http://localhost:3000/stream/606239.ts
+#EXTINF:-1 tvg-id="ptcpunjabi.uk" tvg-name="PB | PTC PUNJABI | UK" tvg-logo="https://upload.wikimedia.org/wikipedia/en/8/88/PTC_Punjabi.png" group-title="PUNJABI",PB | PTC PUNJABI | UK
+http://localhost:3000/stream/606244.ts
+#EXTINF:-1 tvg-id="" tvg-name="PB | PTC PUNJABI | USA" tvg-logo="https://upload.wikimedia.org/wikipedia/en/8/88/PTC_Punjabi.png" group-title="PUNJABI",PB | PTC PUNJABI | USA
+http://localhost:3000/stream/606245.ts
+#EXTINF:-1 tvg-id="sonyhd.in" tvg-name="IN: SONY (4K)." tvg-logo="https://i.ibb.co/p4knk5y/images-4.png" group-title="INDIA ENTERTAINMENT",IN: SONY (4K).
+http://localhost:3000/stream/98854.ts
+#EXTINF:-1 tvg-id="sonysabhd.in" tvg-name="IN: SONY SAB (4K)." tvg-logo="https://i.ibb.co/p4knk5y/images-4.png" group-title="INDIA ENTERTAINMENT",IN: SONY SAB (4K).
+http://localhost:3000/stream/98853.ts
+#EXTINF:-1 tvg-id="colorshd.in" tvg-name="IN: COLORS (4K)." tvg-logo="https://i.ibb.co/p4knk5y/images-4.png" group-title="INDIA ENTERTAINMENT",IN: COLORS (4K).
+http://localhost:3000/stream/98851.ts
+#EXTINF:-1 tvg-id="starplushd.in" tvg-name="IN: STAR PLUS (4K)." tvg-logo="https://i.ibb.co/p4knk5y/imag
